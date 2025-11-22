@@ -1,0 +1,229 @@
+#!/usr/bin/env bash
+set -e
+
+# create folder
+OUT="fintech_full_access_package"
+rm -rf "$OUT"
+mkdir -p "$OUT/src" "$OUT/icons"
+
+# index.html
+cat > "$OUT/index.html" <<'HTML'
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>FinTech FastTrack</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="FinTech FastTrack">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+HTML
+
+# package.json
+cat > "$OUT/package.json" <<'JSON'
+{
+  "name": "fintech-fasttrack",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+JSON
+
+# netlify.toml
+cat > "$OUT/netlify.toml" <<'TOML'
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[context.production.environment]
+  NODE_VERSION = "18"
+TOML
+
+# manifest.json
+cat > "$OUT/manifest.json" <<'JSON'
+{
+  "short_name": "FinTech",
+  "name": "FinTech FastTrack",
+  "icons": [
+    {"src": "/icons/android-chrome-192.png", "type": "image/png", "sizes": "192x192"},
+    {"src": "/icons/android-chrome-512.png", "type": "image/png", "sizes": "512x512"}
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9"
+}
+JSON
+
+# gitignore + README
+cat > "$OUT/.gitignore" <<'TXT'
+/node_modules
+/dist
+.env
+.DS_Store
+npm-debug.log
+TXT
+
+cat > "$OUT/README.md" <<'TXT'
+# FinTech FastTrack - Full Access Deployment Package
+
+This project is ready to build and deploy to Netlify.
+TXT
+
+# src files
+cat > "$OUT/src/main.jsx" <<'JS'
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './App.jsx';
+import './styles.css';
+
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+JS
+
+cat > "$OUT/src/App.jsx" <<'JS'
+import React, { useState, useEffect } from 'react';
+const initialSchedule = {
+  1: [{id:'w1t1', title:'Intro to FinTech (edX)', time:'6h'}, {id:'w1t2', title:'Excel (Coursera)', time:'3h'}],
+  2: [{id:'w2t1', title:'SQL basics', time:'6h'}]
+};
+export default function App() {
+  const [week, setWeek] = useState(1);
+  const [progress, setProgress] = useState({});
+  const [cv, setCv] = useState({name:'', summary:'', experience:'', skills:''});
+  useEffect(() => {
+    const saved = localStorage.getItem('ft_app_state');
+    if (saved) {
+      const obj = JSON.parse(saved);
+      setProgress(obj.progress || {});
+      setCv(obj.cv || {name:'', summary:'', experience:'', skills:''});
+      setWeek(obj.week || 1);
+    }
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('ft_app_state', JSON.stringify({progress, cv, week}));
+  }, [progress, cv, week]);
+  function toggle(id) {
+    setProgress(prev => {
+      const copy = {...prev};
+      if (copy[id]) delete copy[id]; else copy[id] = true;
+      return copy;
+    });
+  }
+  function exportData() {
+    const data = {progress, cv, week};
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'ft_progress.json'; a.click(); URL.revokeObjectURL(url);
+  }
+  return (
+    <div style={{fontFamily:'Arial, sans-serif', padding:20, background:'#f3f4f6', minHeight:'100vh'}}>
+      <div style={{maxWidth:900, margin:'0 auto', background:'#fff', padding:20, borderRadius:8}}>
+        <h1>FinTech FastTrack</h1>
+        <div style={{display:'flex', gap:20}}>
+          <div style={{flex:1}}>
+            <h2>Week {week} Schedule</h2>
+            <div>
+              {(initialSchedule[week] || []).map(task => (
+                <div key={task.id} style={{display:'flex', justifyContent:'space-between', padding:8, borderBottom:'1px solid #eee'}}>
+                  <div>
+                    <strong>{task.title}</strong>
+                    <div style={{fontSize:12, color:'#666'}}>{task.time}</div>
+                  </div>
+                  <div>
+                    <input type='checkbox' checked={!!progress[task.id]} onChange={() => toggle(task.id)} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{marginTop:10}}>
+              <button onClick={() => setWeek(w => Math.max(1, w-1))}>Prev</button>
+              <button onClick={() => setWeek(w => w+1)} style={{marginLeft:8}}>Next</button>
+            </div>
+            <h3 style={{marginTop:20}}>Checklist</h3>
+            <ul>
+              {['Intro to FinTech certificate','Excel certificate','SQL certificate','Power BI certificate','3 Recommendation letters','Portfolio case study'].map((c,i) => (
+                <li key={i}><label><input type='checkbox' checked={!!progress['c'+i]} onChange={() => toggle('c'+i)} /> {c}</label></li>
+              ))}
+            </ul>
+            <div style={{marginTop:12}}>
+              <button onClick={exportData}>Export progress</button>
+              <button onClick={() => { localStorage.removeItem('ft_app_state'); setProgress({}); setCv({name:'', summary:'', experience:'', skills:''}); }} style={{marginLeft:8}}>Reset</button>
+            </div>
+          </div>
+          <div style={{width:340}}>
+            <h2>CV Builder</h2>
+            <div>
+              <input placeholder='Full name' value={cv.name} onChange={e => setCv({...cv, name: e.target.value})} style={{width:'100%', padding:8, marginBottom:8}} />
+              <textarea placeholder='Professional summary' value={cv.summary} onChange={e => setCv({...cv, summary: e.target.value})} style={{width:'100%', padding:8, marginBottom:8}} rows={4} />
+              <textarea placeholder='Experience' value={cv.experience} onChange={e => setCv({...cv, experience: e.target.value})} style={{width:'100%', padding:8, marginBottom:8}} rows={4} />
+              <input placeholder='Skills (comma separated)' value={cv.skills} onChange={e => setCv({...cv, skills: e.target.value})} style={{width:'100%', padding:8, marginBottom:8}} />
+              <div>
+                <button onClick={() => { navigator.clipboard.writeText(formatCV(cv)); alert('CV copied to clipboard'); }}>Copy CV</button>
+              </div>
+            </div>
+            <h3 style={{marginTop:12}}>CV Preview</h3>
+            <pre style={{background:'#f9fafb', padding:10}}>{formatCV(cv)}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function formatCV(cv) {
+  return `${cv.name || 'Your Name'}\\nFinTech Product Analyst\\n\\nSummary:\\n${cv.summary || 'Short summary'}\\n\\nExperience:\\n${cv.experience || 'Your experience'}\\n\\nSkills:\\n${cv.skills || 'Excel, SQL, Power BI'}`;
+}
+JS
+
+cat > "$OUT/src/styles.css" <<'CSS'
+body{margin:0;font-family:Arial,Helvetica,sans-serif}
+button{padding:6px 10px;margin-right:6px}
+input, textarea{border:1px solid #ddd;border-radius:4px}
+CSS
+
+# generate icons using Python (Pillow) if available
+python3 - <<'PY' || true
+from PIL import Image, ImageDraw, ImageFont
+import os
+sizes = [(16,"icons/favicon-16.png"),(32,"icons/favicon-32.png"),(180,"icons/apple-touch-icon.png"),(192,"icons/android-chrome-192.png"),(512,"icons/android-chrome-512.png")]
+for s, path in sizes:
+    img = Image.new("RGBA", (s,s), (14,165,233,255))
+    d = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", s//2)
+    except:
+        font = ImageFont.load_default()
+    w,h = d.textsize("FF", font=font)
+    d.text(((s-w)/2,(s-h)/2), "FF", fill=(255,255,255), font=font)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    img.save(path)
+print("icons created (if Pillow installed)")
+PY
+
+# create zip
+ZIP="fintech_full_access_package.zip"
+rm -f "$ZIP"
+zip -r "$ZIP" "$OUT"
+echo "Created $ZIP in $(pwd)"
