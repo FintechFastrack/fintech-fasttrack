@@ -1,0 +1,12 @@
+fintech-fasttrack/
+ÃÄ index.html
+ÃÄ package.json
+ÃÄ netlify.toml
+ÃÄ manifest.json
+ÃÄ README.md
+ÃÄ .gitignore
+ÃÄ src/
+³  ÃÄ main.jsx
+³  ÃÄ App.jsx
+³  ÀÄ styles.css
+ÀÄ icons-generator.py   (optional: generates PNG icons locally)
