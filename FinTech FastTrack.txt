@@ -1,0 +1,18 @@
+# FinTech FastTrack - Full Access Deployment Package
+
+This package is ready to push to GitHub and auto-deploy on Netlify.
+
+## How to use
+
+1. Unzip the package.
+2. Create a new GitHub repository and push the folder contents (instructions below).
+3. On Netlify, create a new site from Git and connect your repo. Netlify will run `npm run build` and publish `dist/`.
+
+### Git commands (replace <your-repo-url> with your GitHub repo URL)
+```bash
+git init
+git add .
+git commit -m "Initial commit - FinTech FastTrack"
+git branch -M main
+git remote add origin <your-repo-url>
+git push -u origin main
