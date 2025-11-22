@@ -1,0 +1,4 @@
+# ensure Node 16+ is installed
+npm install
+npm run dev
+# open the URL printed by vite (e.g. http://localhost:5173)

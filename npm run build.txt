@@ -1,0 +1,2 @@
+npm run build
+# results are in the "dist" folder

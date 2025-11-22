@@ -1,0 +1,17 @@
+# icons-generator.py
+from PIL import Image, ImageDraw, ImageFont
+sizes = [16,32,180,192,512]
+bg = (14,165,233)  # professional blue
+text = "FF"
+for s in sizes:
+    img = Image.new("RGBA", (s,s), bg+(255,))
+    draw = ImageDraw.Draw(img)
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", s//2)
+    except:
+        font = ImageFont.load_default()
+    w,h = draw.textsize(text, font=font)
+    draw.text(((s-w)/2,(s-h)/2), text, fill=(255,255,255), font=font)
+    fname = f"icons/icon-{s}.png"
+    img.save(fname)
+    print("Saved", fname)

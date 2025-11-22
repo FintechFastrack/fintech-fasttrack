@@ -1,0 +1,8 @@
+# install Pillow if not installed
+pip install pillow
+
+# create icons folder
+mkdir icons
+
+# run the script
+python icons-generator.py
